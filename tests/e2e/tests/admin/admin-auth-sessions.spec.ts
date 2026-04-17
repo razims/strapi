@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { resetDatabaseAndImportDataFromPath } from '../../utils/dts-import';
-import { login } from '../../utils/login';
+import { resetDatabaseAndImportDataFromPath } from '../../../utils/dts-import';
+import { login } from '../../../utils/login';
 import { TITLE_LOGIN, TITLE_HOME } from '../../constants';
 
 test.describe('Legacy Admin Token Migration', () => {
   test.beforeEach(async ({ page, context }) => {
-    await resetDatabaseAndImportDataFromPath('with-admin.tar');
+    await resetDatabaseAndImportDataFromPath('with-admin');
     await context.clearCookies();
     await page.goto('/admin');
   });

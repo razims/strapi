@@ -1,12 +1,23 @@
 # CLI Tests
 
+## Overview
+
+CLI tests use Jest to test Strapi CLI commands and functionality. They share the same infrastructure as e2e tests:
+
+- **Shared app template**: Both test types use `tests/app-template` to generate test applications
+- **Shared utilities**: Common test utilities are in `tests/utils/`
+- **Shared runners**: Test app setup and management is handled by `tests/utils/runners/shared-setup.js`
+- **Unified test runner**: Both use `tests/scripts/run-tests.js` with different execution strategies
+
+The main difference is that CLI tests use Jest for test execution, while e2e tests use Playwright for browser automation.
+
 ## Running the tests
 
-Run `yarn test:cli` to begin. The command will generate the required number of test applications based on the CLI app-template, seed them with preconfigured data [not yet implemented], then run the test suites (or "domains").
+Run `yarn test:cli` to begin. The command will generate the required number of test applications based on the shared app-template, seed them with preconfigured data [not yet implemented], then run the test suites (or "domains").
 
 The `-c X` option can be used to limit the number of concurrently running domains, where `X` is the number to be run simultaneously.
 
-If any changes are made to the template, or other issues are being encountered, try removing and regenerating the test apps by using `yarn test:cli:clean` before running the tets.
+If any changes are made to the template, or other issues are being encountered, try removing and regenerating the test apps by using `yarn test:cli:clean` before running the tests.
 
 ## Writing tests
 
@@ -32,6 +43,8 @@ After tests for remote data-transfer are implemented, there will be utility func
 
 Each subdirectory within the `./tests` directory here is considered a test "domain" and will have its own test app(s) available. By default only one test app is made available unless additional ones are configured in a config.js within that test domain.
 
+Some domains need no shared test app (e.g. **`create-strapi-app`** uses `testApps: 0` in `config.js`). Those domains can run in parallel with app-backed domains; the runner reserves apps only when `testApps > 0`. Others put tests in **subfolders** under the domain—e.g. `strapi/strapi/`, `strapi/data-transfer/`, `strapi/version/`. Use the `*.test.cli.js` / `*.test.cli.ts` naming from `jest.config.cli.js` at the repo root.
+
 #### tests/{domain}/config.js
 
 This optional file should return a function that returns a configuration object like the following complete example:
@@ -47,3 +60,12 @@ module.exports = () => {
 ### How to run and test CLI commands
 
 See the available tests in the `tests` directory for examples.
+
+### Updating Jest snapshots
+
+Some CLI tests (for example `strapi/strapi/openapi-generate.test.cli.ts`) commit **Jest snapshot** files. After intentional changes to the app template, generator output, or CLI output, regenerate snapshots with Jest’s `-u` instead of editing `.snap` files by hand.
+
+- **From the repo root:** `yarn test:cli:update` runs the CLI test runner with `-u` forwarded to Jest (same as `yarn test:cli -u`). Limit domains or add extra Jest flags when needed, for example `yarn test:cli -d strapi -u -- --testPathPattern=openapi-generate`.
+- **Direct Jest** (single file or when you only want to refresh snapshots without touching every domain): see **[tests/strapi/strapi/README.md](tests/strapi/strapi/README.md)** — you must set `TEST_APPS` and `JWT_SECRET` like the runner does.
+
+See **[tests/strapi/strapi/README.md](tests/strapi/strapi/README.md)** for how snapshots work in the `strapi` domain (including OpenAPI and list-output tests) and when to run `yarn test:cli:clean` / `yarn test:cli --setup`.
